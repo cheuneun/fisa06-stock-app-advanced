@@ -79,11 +79,53 @@ if confirm_btn:
             else:
                 st.subheader(f"[{company_name}] 주가 데이터")
                 st.dataframe(price_df.tail(10), width="stretch")
+                box_df = price_df[['Open', 'High', 'Low', 'Close']].tail(10)
+
 
                 # Matplotlib 시각화
                 fig, ax = plt.subplots(figsize=(12, 5))
                 price_df['Close'].plot(ax=ax, grid=True, color='red')
                 ax.set_title(f"{company_name} 종가 추이", fontsize=15)
+                st.pyplot(fig)
+
+                fig, ax = plt.subplots(figsize=(12, 5))
+                # 전일 종가
+                price_df['PrevClose'] = price_df['Close'].shift(1)
+
+                # 상한가 / 하한가
+                price_df['UpperLimit'] = price_df['PrevClose'] * 1.3
+                price_df['LowerLimit'] = price_df['PrevClose'] * 0.7
+                # 종가
+                ax.plot(price_df.index, price_df['Close'], label='종가', color='black')
+
+                # 상한가 / 하한가
+                ax.plot(price_df.index, price_df['UpperLimit'],label='상한가', linestyle='--', color='red', alpha=0.7)
+                ax.plot(price_df.index, price_df['LowerLimit'],label='하한가', linestyle='--', color='blue', alpha=0.7)
+
+                ax.set_title(f"{company_name} 종가 · 상한가 · 하한가", fontsize=15)
+                ax.set_ylabel("가격")
+                ax.legend()
+                ax.grid(True)
+
+                st.pyplot(fig)
+
+                fig, ax = plt.subplots(figsize=(14, 5))
+
+                # 날짜별 boxplot 데이터 (각 행이 하루)
+                box_data = box_df.values.tolist()
+
+                ax.boxplot(
+                    box_data,
+                    labels=box_df.index.strftime('%m-%d'),
+                    showfliers=True
+                )
+
+                ax.set_title(f"{company_name} 일별 주가 분포 (OHLC Boxplot)", fontsize=15)
+                ax.set_xlabel("날짜")
+                ax.set_ylabel("가격")
+                ax.grid(axis='y')
+
+                plt.xticks(rotation=45)
                 st.pyplot(fig)
 
                 # 엑셀 다운로드 기능
